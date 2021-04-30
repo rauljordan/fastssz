@@ -95,17 +95,26 @@ func (v *Value) hashTreeRoot() string {
 		return v.hashTreeRootContainer(false)
 
 	case TypeBytes:
+		tmpl := `{{.validate}}hh.PutBytes(::.{{.name}})`
+		if v.s == 0 && v.m > 0 {
+			tmpl = `
+			{{.validate}}
+			num := uint64(len(::.{{.name}}))
+			txSubIndx := hh.Index()
+			hh.PutBytes(::.{{.name}})
+			hh.MerkleizeWithMixin(txSubIndx, num, {{.max}})
+			`
+		}
 		// There are only fixed []byte
 		name := v.name
 		if v.c {
 			name += "[:]"
 		}
-
-		tmpl := `{{.validate}}hh.PutBytes(::.{{.name}})`
 		return execTmpl(tmpl, map[string]interface{}{
 			"validate": v.validate(),
 			"name":     name,
 			"size":     v.s,
+			"max":      v.m,
 		})
 
 	case TypeUint:

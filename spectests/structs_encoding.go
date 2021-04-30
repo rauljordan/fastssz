@@ -7,6 +7,95 @@ import (
 	external2Alias "github.com/ferranbt/fastssz/spectests/external2"
 )
 
+// MarshalSSZ ssz marshals the SomeSpecialType object
+func (s *SomeSpecialType) MarshalSSZ() ([]byte, error) {
+	return ssz.MarshalSSZ(s)
+}
+
+// MarshalSSZTo ssz marshals the SomeSpecialType object to a target array
+func (s *SomeSpecialType) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+	dst = buf
+	offset := int(4)
+
+	// Offset (0) 'Participation'
+	dst = ssz.WriteOffset(dst, offset)
+	offset += len(s.Participation)
+
+	// Field (0) 'Participation'
+	if len(s.Participation) > 2048 {
+		err = ssz.ErrBytesLength
+		return
+	}
+	dst = append(dst, s.Participation...)
+
+	return
+}
+
+// UnmarshalSSZ ssz unmarshals the SomeSpecialType object
+func (s *SomeSpecialType) UnmarshalSSZ(buf []byte) error {
+	var err error
+	size := uint64(len(buf))
+	if size < 4 {
+		return ssz.ErrSize
+	}
+
+	tail := buf
+	var o0 uint64
+
+	// Offset (0) 'Participation'
+	if o0 = ssz.ReadOffset(buf[0:4]); o0 > size {
+		return ssz.ErrOffset
+	}
+
+	// Field (0) 'Participation'
+	{
+		buf = tail[o0:]
+		if len(buf) > 2048 {
+			return ssz.ErrBytesLength
+		}
+		if cap(s.Participation) == 0 {
+			s.Participation = make([]byte, 0, len(buf))
+		}
+		s.Participation = append(s.Participation, buf...)
+	}
+	return err
+}
+
+// SizeSSZ returns the ssz encoded size in bytes for the SomeSpecialType object
+func (s *SomeSpecialType) SizeSSZ() (size int) {
+	size = 4
+
+	// Field (0) 'Participation'
+	size += len(s.Participation)
+
+	return
+}
+
+// HashTreeRoot ssz hashes the SomeSpecialType object
+func (s *SomeSpecialType) HashTreeRoot() ([32]byte, error) {
+	return ssz.HashWithDefaultHasher(s)
+}
+
+// HashTreeRootWith ssz hashes the SomeSpecialType object with a hasher
+func (s *SomeSpecialType) HashTreeRootWith(hh *ssz.Hasher) (err error) {
+	indx := hh.Index()
+
+	// Field (0) 'Participation'
+
+	if len(s.Participation) > 2048 {
+		err = ssz.ErrBytesLength
+		return
+	}
+
+	num := uint64(len(s.Participation))
+	txSubIndx := hh.Index()
+	hh.PutBytes(s.Participation)
+	hh.MerkleizeWithMixin(txSubIndx, num, 2048)
+
+	hh.Merkleize(indx)
+	return
+}
+
 // MarshalSSZ ssz marshals the AggregateAndProof object
 func (a *AggregateAndProof) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(a)

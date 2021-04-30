@@ -5,6 +5,10 @@ import (
 	external2Alias "github.com/ferranbt/fastssz/spectests/external2"
 )
 
+type SomeSpecialType struct {
+	Participation []byte `json:"participation" ssz-max:"2048"`
+}
+
 type AggregateAndProof struct {
 	Index          uint64             `json:"aggregator_index"`
 	Aggregate      *Attestation       `json:"aggregate"`
